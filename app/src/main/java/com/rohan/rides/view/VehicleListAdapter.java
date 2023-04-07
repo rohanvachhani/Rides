@@ -39,8 +39,8 @@ public class VehicleListAdapter extends RecyclerView.Adapter<VehicleListAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Vehicle vehicle = vehicleList.get(position);
-        holder.makeAndModelTextView.setText(vehicle.getMakeAndModel());
-        holder.vinTextView.setText(vehicle.getVin());
+        holder.mMakeAndModelTextView.setText(vehicle.getMakeAndModel());
+        holder.mVinTextView.setText(vehicle.getVin());
     }
 
     @Override
@@ -54,13 +54,13 @@ public class VehicleListAdapter extends RecyclerView.Adapter<VehicleListAdapter.
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public TextView makeAndModelTextView;
-        public TextView vinTextView;
+        public TextView mMakeAndModelTextView;
+        public TextView mVinTextView;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            makeAndModelTextView = itemView.findViewById(R.id.make_and_model_textview);
-            vinTextView = itemView.findViewById(R.id.vin_textview);
+            mMakeAndModelTextView = itemView.findViewById(R.id.make_and_model_textview);
+            mVinTextView = itemView.findViewById(R.id.vin_textview);
             itemView.setOnClickListener(this);
         }
 

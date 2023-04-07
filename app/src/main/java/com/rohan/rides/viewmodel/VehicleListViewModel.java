@@ -34,8 +34,16 @@ public class VehicleListViewModel extends ViewModel {
         return vehicleList;
     }
 
+    private MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
+    public MutableLiveData<Boolean> getIsLoading() {
+        return isLoading;
+    }
+    public void setIsLoading(MutableLiveData<Boolean> isLoading) {
+        this.isLoading = isLoading;
+    }
 
     public void retrieveVehicles(int count) {
+        isLoading.postValue(true); // Set isLoading to true before making the API call
         OkHttpClient client = new OkHttpClient();
 
         HttpUrl url = new HttpUrl.Builder()
@@ -66,7 +74,8 @@ public class VehicleListViewModel extends ViewModel {
                             String vin = jsonObject.getString("vin");
                             String color = jsonObject.getString("color");
                             String carType = jsonObject.getString("car_type");
-                            vehicles.add(new Vehicle(makeAndModel, vin, color, carType));
+                            String kilometrage = jsonObject.getString("kilometrage");
+                            vehicles.add(new Vehicle(makeAndModel, vin, color, carType, kilometrage));
                         }
                         Collections.sort(vehicles, new Comparator<Vehicle>() {
                             @Override
@@ -75,8 +84,11 @@ public class VehicleListViewModel extends ViewModel {
                             }
                         });
                         vehicleList.postValue(vehicles);
+                        isLoading.postValue(false); // Set isLoading to false after the API call is complete
+
                     } catch (JSONException e) {
                         e.printStackTrace();
+                        isLoading.postValue(false); // Set isLoading to false upon getting exceptions
                         Log.e(this.getClass().getCanonicalName(), "Failed to retrieve vehicles: " + e.getMessage());
                     }
                 }
@@ -85,6 +97,7 @@ public class VehicleListViewModel extends ViewModel {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 // Handle failure silently
+                isLoading.postValue(false); // Set isLoading to false on failure as well
                 Log.e(this.getClass().getCanonicalName(), "Failed to retrieve vehicles: " + e.getMessage());
             }
         });

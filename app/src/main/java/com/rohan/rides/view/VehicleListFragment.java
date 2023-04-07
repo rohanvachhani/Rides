@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -19,35 +20,39 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.rohan.rides.R;
+import com.rohan.rides.utils.Utils;
 import com.rohan.rides.viewmodel.VehicleListViewModel;
 
 public class VehicleListFragment extends Fragment {
 
-    private EditText inputField;
-    private Button retrieveButton;
-    private RecyclerView recyclerView;
+    private EditText mInputField;
+    private Button mRetrieveButton;
+    private RecyclerView mRecyclerView;
 
     private VehicleListAdapter adapter;
     private VehicleListViewModel viewModel;
 
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private ProgressBar progressBar;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_vehicle_list, container, false);
 
-        // Initialize UI elements
-        inputField = view.findViewById(R.id.input_field);
-        retrieveButton = view.findViewById(R.id.retrieve_button);
-        recyclerView = view.findViewById(R.id.vehicle_list_recycler_view);
-
+        mInputField = view.findViewById(R.id.input_field);
+        mRetrieveButton = view.findViewById(R.id.retrieve_button);
+        mRecyclerView = view.findViewById(R.id.vehicle_list_recycler_view);
+        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
+        progressBar = view.findViewById(R.id.progress_bar);
 
         // Initialize RecyclerView and adapter
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         adapter = new VehicleListAdapter();
-        recyclerView.setAdapter(adapter);
+        mRecyclerView.setAdapter(adapter);
 
         // Initialize ViewModel
         viewModel = new ViewModelProvider(this).get(VehicleListViewModel.class);
@@ -56,14 +61,29 @@ public class VehicleListFragment extends Fragment {
         viewModel.getVehicleList().observe(getViewLifecycleOwner(), vehicles -> {
             adapter.setVehicleList(vehicles);
             adapter.notifyDataSetChanged();
+            swipeRefreshLayout.setRefreshing(false);
+            progressBar.setVisibility(View.GONE);
         });
 
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
+            if (isLoading && !swipeRefreshLayout.isRefreshing()) {
+                progressBar.setVisibility(View.VISIBLE);
+            } else {
+                progressBar.setVisibility(View.GONE);
+            }
+        });
 
         // Set click listener on the retrieve button to trigger the API call
-        retrieveButton.setOnClickListener(v -> {
+        mRetrieveButton.setOnClickListener(v -> {
             hideKeyboard();
             retrieveVehicles();
+        });
 
+        // Set up pull-to-refresh functionality
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            hideKeyboard();
+            retrieveVehicles();
+            swipeRefreshLayout.setRefreshing(false);
         });
 
 
@@ -95,14 +115,14 @@ public class VehicleListFragment extends Fragment {
 
     private void retrieveVehicles() {
         int count;
-        if (inputField.getText().toString().isEmpty()) {
+        if (mInputField.getText().toString().isEmpty()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage("Please enter a value!")
                     .setTitle("No Values Found")
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            inputField.setText("");
+                            mInputField.setText("");
                         }
                     });
             AlertDialog dialog = builder.create();
@@ -110,7 +130,7 @@ public class VehicleListFragment extends Fragment {
             return;
         }
         try {
-            count = Integer.parseInt(inputField.getText().toString());
+            count = Integer.parseInt(mInputField.getText().toString());
             // do something with the value
         } catch (NumberFormatException e) {
             // handle the exception
@@ -118,7 +138,21 @@ public class VehicleListFragment extends Fragment {
             return;
         }
 
-        viewModel.retrieveVehicles(count);
+        if (Utils.isValueInRange(count)) {
+            viewModel.retrieveVehicles(count);
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("Value must be in the range 1 to 100")
+                    .setTitle("Invalid Input")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            mInputField.setText("");
+                        }
+                    });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }
     }
 
 }

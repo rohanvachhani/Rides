@@ -19,13 +19,15 @@ public class Vehicle implements Parcelable {
     private final String makeAndModel;
     private final String color;
     private final String carType;
+    private final String kilometrage;
 
 
-    public Vehicle(String vin, String makeAndModel, String color, String carType) {
+    public Vehicle(String vin, String makeAndModel, String color, String carType, String kilometrage) {
         this.vin = vin;
         this.makeAndModel = makeAndModel;
         this.color = color;
         this.carType = carType;
+        this.kilometrage = kilometrage;
     }
 
     protected Vehicle(Parcel in) {
@@ -33,6 +35,7 @@ public class Vehicle implements Parcelable {
         makeAndModel = in.readString();
         color = in.readString();
         carType = in.readString();
+        kilometrage = in.readString();
     }
 
     public String getVin() {
@@ -51,6 +54,10 @@ public class Vehicle implements Parcelable {
         return carType;
     }
 
+    public String getKilometrage() {
+        return kilometrage;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -62,6 +69,7 @@ public class Vehicle implements Parcelable {
         dest.writeString(makeAndModel);
         dest.writeString(color);
         dest.writeString(carType);
+        dest.writeString(kilometrage);
     }
 
     @Override
@@ -71,6 +79,7 @@ public class Vehicle implements Parcelable {
                 ", makeAndModel='" + makeAndModel + '\'' +
                 ", color='" + color + '\'' +
                 ", carType='" + carType + '\'' +
+                ", kilometrage='" + kilometrage + '\'' +
                 '}';
     }
 }
